@@ -1,4 +1,5 @@
 
+
 class Settings:
     """A place to store settings for asteroid shooter"""
 
@@ -17,3 +18,12 @@ class Settings:
         self.missile_height=7
         self.missile_color=(244,252,3)
         self.missile_allowed=7
+
+        #asteroid settings
+        self.asteroid_speedy = 4.5
+        self.asteroid_speedx = 4.5
+        self.asteroid_direction = 1
+        self.asteroid_speedy_2 = 4.5
+        self.asteroid_speedx_2 = 4.5
+        self.asteroid_direction_2 = 1
+
