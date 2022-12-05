@@ -1,11 +1,13 @@
 import pygame
 
-
-class Ships:
+from pygame.sprite import Sprite
+import settings
+class Ships(Sprite):
     """A class to create and manage the ship"""
 
     def __init__(self, ag_game):
         """Initialize the ship and put it in its starting position"""
+        super().__init__()
         self.screen = ag_game.screen
         self.settings = ag_game.settings
         self.screen_rect = ag_game.screen.get_rect()
@@ -15,7 +17,6 @@ class Ships:
         self.rect = self.image.get_rect()
 
         self.rect.center = self.screen_rect.center
-        self.image_center = self.rect.center
 
         self.x=float(self.rect.x)
         self.y=float(self.rect.y)
@@ -31,13 +32,13 @@ class Ships:
         """Update the ships rotation based on the movement flag"""
 
         if self.moving_right and self.rect.right < self.screen_rect.right:
-            self.x += self.settings.ship_speed
+            self.x += settings.SHIP_SPEED
         if self.moving_left and self.rect.left > self.screen_rect.left:
-            self.x -= self.settings.ship_speed
+            self.x -= settings.SHIP_SPEED
         if self.moving_up and self.rect.top > self.screen_rect.top:
-            self.y -= self.settings.ship_speed
+            self.y -= settings.SHIP_SPEED
         if self.moving_down and self.rect.bottom < self.screen_rect.bottom:
-            self.y += self.settings.ship_speed
+            self.y += settings.SHIP_SPEED
 
 
         #update rect object form movement commands
@@ -49,4 +50,4 @@ class Ships:
 
     def move(self):
         """center the ship on the screen"""
-        self.rect.center = self.image_center
+        self.rect.center = self.rect.center

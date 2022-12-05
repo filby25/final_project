@@ -1,4 +1,12 @@
-
+SHIP_SPEED = 4
+MIN_ASTEROID_SPEED= 3.5
+RANGE_ASTEROID_SPEED= 1.5
+SHIP_LIMIT = 3
+MISSILE_SPEED = 4
+MISSILES_ALLOWED = 6
+MISSILE_WIDTH = 4
+MISSILE_LENGTH = 20
+MISSILE_COLOR = (184,222,60)
 
 class Settings:
     """A place to store settings for asteroid shooter"""
