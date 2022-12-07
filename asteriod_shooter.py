@@ -1,6 +1,6 @@
 import pygame
 import sys
-
+from time import sleep
 import settings
 from settings import Settings
 from ships import Ships
@@ -16,24 +16,24 @@ class AsteroidShooter:
         pygame.init()
         self.settings = Settings()
 
-        #self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        self.screen = pygame.display.set_mode((500,500))
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        #self.screen = pygame.display.set_mode((500,500))
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         self.screen_rect = self.screen.get_rect()
-        self.asteroids = pygame.sprite.Group(Asteroid((self.screen_rect.midleft)),
-                                             Asteroid((self.screen_rect.midtop)),
-                                             Asteroid((self.screen_rect.midright)),
-                                             Asteroid((self.screen_rect.midbottom))
+        self.asteroids = pygame.sprite.Group(Asteroid(self.screen_rect.midleft),
+                                             Asteroid(self.screen_rect.midtop),
+                                             Asteroid(self.screen_rect.midright),
+                                             Asteroid(self.screen_rect.midbottom)
                                              )
-        self.ships = Ships(self)
-        self.missiles= Missile(self)
+        self.ships = Ships(self.screen_rect.center)
         self.ship = pygame.sprite.Group()
-        self.missile = pygame.sprite.Group()
-
+        self.missiles = pygame.sprite.Group()
         self.space = pygame.image.load('images/blue.png')
         self.space_rect = self.space.get_rect()
         self.background = pygame.surface.Surface((self.screen_rect.width, self.screen_rect.height))
+        self.missile_sound = pygame.mixer.Sound('sounds/missile_shot.ogg')
+        self.asteroid_sound = pygame.mixer.Sound('sounds/asteroid_shot.ogg')
         for y in range(self.screen_rect.height):
             for x in range(self.screen_rect.width):
                 self.background.blit(self.space, (x * self.space_rect.width, y * self.space_rect.height))
@@ -55,26 +55,10 @@ class AsteroidShooter:
             self.ships.moving_down=True
             self.ships.image= pygame.image.load('images/player_down.png')
         if event.key == pygame.K_SPACE:
-            self.missiles.update()
+            if len(self.missiles) < settings.MISSILES_ALLOWED:
+                self.ships.shooting = True
+                pygame.mixer.Sound.play(self.missile_sound)
 
-    def collisions(self):
-        """Check collisions"""
-        if pygame.sprite.spritecollideany(self.ships, self.asteroids):
-            pygame.sprite.Group.remove(self.asteroids)
-            print("collision")
-            self.restart_level()
-
-    def restart_level(self):
-        """restart level if the ship gets hit"""
-        if settings.SHIP_LIMIT > 0:
-            self.ships.move()
-
-
-
-    # def end_game(self):
-    #     """function to end the game"""
-    #     if settings.SHIP_LIMIT == 0:
-    #         sys.exit()
 
     def check_keyup_events(self,event):
         """Respond to key releases"""
@@ -100,25 +84,39 @@ class AsteroidShooter:
         """Start the main loop for the game"""
         clock= pygame.time.Clock()
         while True:
+            level = 0
             self.check_events()
-            self.ships.update()
-            self.collisions()
-            self.asteroids.update(self.screen_rect)
-            self.asteroids.update(self.screen_rect)
-            #self.collisions()
+            if settings.SHIP_LIMIT > 0:
+                level += 1
+                self.ships.update(self.screen_rect.height, self.screen_rect.width, self.missiles)
+                self.asteroids.update(self.screen_rect)
+                while pygame.sprite.groupcollide(self.missiles, self.asteroids, True, True):
+                    pygame.mixer.Sound.play(self.asteroid_sound)
+                self.missiles.update()
+                for missile in self.missiles.copy():
+                    if missile.rect.bottom <= 0 or missile.rect.top >= self.screen_rect.bottom:
+                        self.missiles.remove(missile)
+                    if missile.rect.right <= 0 or missile.rect.left >= self.screen_rect.right:
+                        self.missiles.remove(missile)
+                if pygame.sprite.spritecollideany(self.ships, self.asteroids):
+                    settings.SHIP_LIMIT -= 1
+                    self.asteroids.empty()
+                    self.missiles.empty()
+                    self.ships.reset(self.screen)
+                self.update_screen()
             # if self.asteroids.empty():
             #     level += 1
             #     for i range(level):
             #         self.asteroids.add(Asteroid((0,0)))
-            self.update_screen()
             clock.tick(60)
 
     def update_screen(self):
         """Update the screen and flip to new screen"""
         self.screen.blit(self.background, (0, 0))
-        self.ships.blitme()
+        self.ships.blitme(self.screen)
         self.asteroids.draw(self.screen)
-        self.missile.draw(self.screen)
+        for missile in self.missiles.sprites():
+            missile.blitme(self.screen)
         pygame.display.flip()
 
 

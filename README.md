@@ -1,2 +1,11 @@
-# final_project
- final project for EW200
+# Asteroid Shooter
+    A fun space survival game
+## Controls:
+            w: up
+            s: down
+            a: left
+            d: right
+        space: shoot
+
+---
+## Credits:
