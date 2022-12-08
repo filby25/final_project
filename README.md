@@ -9,3 +9,4 @@
 
 ---
 ## Credits:
+    Akshat helped me figure out my random variables and calling them

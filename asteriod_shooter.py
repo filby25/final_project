@@ -1,6 +1,7 @@
 import pygame
 import sys
 from time import sleep
+from random import choice
 import settings
 from settings import Settings
 from ships import Ships
@@ -13,19 +14,13 @@ class AsteroidShooter:
     def __init__(self):
         """Initialize the game and create game resources"""
 
+        pygame.font.init()
         pygame.init()
-        self.settings = Settings()
-
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         #self.screen = pygame.display.set_mode((500,500))
-        self.settings.screen_width = self.screen.get_rect().width
-        self.settings.screen_height = self.screen.get_rect().height
         self.screen_rect = self.screen.get_rect()
-        self.asteroids = pygame.sprite.Group(Asteroid(self.screen_rect.midleft),
-                                             Asteroid(self.screen_rect.midtop),
-                                             Asteroid(self.screen_rect.midright),
-                                             Asteroid(self.screen_rect.midbottom)
-                                             )
+        self.rand_side = (self.screen_rect.topleft, self.screen_rect.topright, self.screen_rect.bottomleft, self.screen_rect.bottomright, self.screen_rect.midtop, self.screen_rect.midright, self.screen_rect.midbottom, self.screen_rect.midleft)
+        self.asteroids = pygame.sprite.Group()
         self.ships = Ships(self.screen_rect.center)
         self.ship = pygame.sprite.Group()
         self.missiles = pygame.sprite.Group()
@@ -42,6 +37,9 @@ class AsteroidShooter:
         """respond to keypresses"""
         if event.key == pygame.K_q:
             sys.exit()
+        #station controls
+
+        # ship controls
         if event.key == pygame.K_a:
             self.ships.moving_left=True
             self.ships.image = pygame.image.load('images/player_left.png')
@@ -83,32 +81,54 @@ class AsteroidShooter:
     def run_game(self):
         """Start the main loop for the game"""
         clock= pygame.time.Clock()
+        font_lose = pygame.font.SysFont('comicsans.ttf', 70)
+        font = pygame.font.SysFont('comicsansms.ttf', 50)
+        text_lose = font_lose.render('YOU LOSE', 1, (0,0,0))
+        text = font.render('Level:  ', True, (30,30,30))
+
+        level = 1
         while True:
-            level = 0
             self.check_events()
+
+            if settings.SHIP_LIMIT == 0:
+                self.screen.fill((255,255,255))
+                self.screen.blit(text_lose, (520, 300))
+                pygame.display.update()
+                sleep(2)
+                sys.exit()
+
+
             if settings.SHIP_LIMIT > 0:
-                level += 1
+                if len(self.asteroids) == 0:
+                    for i in range(level):
+                        self.asteroids.add(Asteroid(choice(self.rand_side)))
+                    level += 1
+                #updates the ship, asteroids, and missiles
+                self.screen.blit(text, text.get_rect())
                 self.ships.update(self.screen_rect.height, self.screen_rect.width, self.missiles)
                 self.asteroids.update(self.screen_rect)
+                self.missiles.update()
+                #plays a sound when an asteroid gets hit
                 while pygame.sprite.groupcollide(self.missiles, self.asteroids, True, True):
                     pygame.mixer.Sound.play(self.asteroid_sound)
-                self.missiles.update()
+                #remove the missile if it goes off screen
                 for missile in self.missiles.copy():
                     if missile.rect.bottom <= 0 or missile.rect.top >= self.screen_rect.bottom:
                         self.missiles.remove(missile)
                     if missile.rect.right <= 0 or missile.rect.left >= self.screen_rect.right:
                         self.missiles.remove(missile)
+                #resets the position of the ship and asteroids when the ship gets hit
                 if pygame.sprite.spritecollideany(self.ships, self.asteroids):
                     settings.SHIP_LIMIT -= 1
                     self.asteroids.empty()
                     self.missiles.empty()
                     self.ships.reset(self.screen)
+                    level = level-1
                 self.update_screen()
-            # if self.asteroids.empty():
-            #     level += 1
-            #     for i range(level):
-            #         self.asteroids.add(Asteroid((0,0)))
-            clock.tick(60)
+                clock.tick(60)
+            else:
+                sleep(5)
+                sys.exit()
 
     def update_screen(self):
         """Update the screen and flip to new screen"""
