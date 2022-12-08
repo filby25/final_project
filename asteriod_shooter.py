@@ -5,6 +5,7 @@ from random import choice
 import settings
 from settings import Settings
 from ships import Ships
+from station import Station
 from missiles import Missile
 from asteroid import Asteroid
 
@@ -21,6 +22,8 @@ class AsteroidShooter:
         self.screen_rect = self.screen.get_rect()
         self.rand_side = (self.screen_rect.topleft, self.screen_rect.topright, self.screen_rect.bottomleft, self.screen_rect.bottomright, self.screen_rect.midtop, self.screen_rect.midright, self.screen_rect.midbottom, self.screen_rect.midleft)
         self.asteroids = pygame.sprite.Group()
+        self.stations= Station(self.screen_rect.center)
+        self.station= pygame.sprite.Group()
         self.ships = Ships(self.screen_rect.center)
         self.ship = pygame.sprite.Group()
         self.missiles = pygame.sprite.Group()
@@ -38,7 +41,18 @@ class AsteroidShooter:
         if event.key == pygame.K_q:
             sys.exit()
         #station controls
-
+        if event.key == pygame.K_UP:
+            self.stations.moving_up = True
+            self.stations.image = pygame.image.load('images/station.png')
+        if event.key == pygame.K_DOWN:
+            self.stations.moving_down = True
+            self.stations.image = pygame.image.load('images/station_down.png')
+        if event.key == pygame.K_LEFT:
+            self.stations.moving_left = True
+            self.stations.image = pygame.image.load('images/station_left.png')
+        if event.key == pygame.K_RIGHT:
+            self.stations.moving_right = True
+            self.stations.image = pygame.image.load('images/station_right.png')
         # ship controls
         if event.key == pygame.K_a:
             self.ships.moving_left=True
@@ -60,6 +74,14 @@ class AsteroidShooter:
 
     def check_keyup_events(self,event):
         """Respond to key releases"""
+        if event.key == pygame.K_UP:
+            self.stations.moving_up = False
+        elif event.key == pygame.K_DOWN:
+            self.stations.moving_down = False
+        elif event.key == pygame.K_LEFT:
+            self.stations.moving_left = False
+        elif event.key == pygame.K_RIGHT:
+            self.stations.moving_right = False
         if event.key == pygame.K_a:
             self.ships.moving_left=False
         elif event.key == pygame.K_d:
@@ -103,11 +125,13 @@ class AsteroidShooter:
                     for i in range(level):
                         self.asteroids.add(Asteroid(choice(self.rand_side)))
                     level += 1
+
                 #updates the ship, asteroids, and missiles
                 self.screen.blit(text, text.get_rect())
                 self.ships.update(self.screen_rect.height, self.screen_rect.width, self.missiles)
                 self.asteroids.update(self.screen_rect)
                 self.missiles.update()
+                self.stations.update(self.screen_rect.height, self.screen_rect.width)
                 #plays a sound when an asteroid gets hit
                 while pygame.sprite.groupcollide(self.missiles, self.asteroids, True, True):
                     pygame.mixer.Sound.play(self.asteroid_sound)
@@ -118,10 +142,11 @@ class AsteroidShooter:
                     if missile.rect.right <= 0 or missile.rect.left >= self.screen_rect.right:
                         self.missiles.remove(missile)
                 #resets the position of the ship and asteroids when the ship gets hit
-                if pygame.sprite.spritecollideany(self.ships, self.asteroids):
+                if pygame.sprite.spritecollideany(self.ships, self.asteroids) or pygame.sprite.spritecollideany(self.stations, self.asteroids) or pygame.sprite.spritecollideany(self.stations, self.missiles):
                     settings.SHIP_LIMIT -= 1
                     self.asteroids.empty()
                     self.missiles.empty()
+                    self.stations.reset(self.screen)
                     self.ships.reset(self.screen)
                     level = level-1
                 self.update_screen()
@@ -133,6 +158,7 @@ class AsteroidShooter:
     def update_screen(self):
         """Update the screen and flip to new screen"""
         self.screen.blit(self.background, (0, 0))
+        self.stations.blitme(self.screen)
         self.ships.blitme(self.screen)
         self.asteroids.draw(self.screen)
         for missile in self.missiles.sprites():
