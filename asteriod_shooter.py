@@ -3,10 +3,8 @@ import sys
 from time import sleep
 from random import choice
 import settings
-from settings import Settings
 from ships import Ships
 from station import Station
-from missiles import Missile
 from asteroid import Asteroid
 
 class AsteroidShooter:
@@ -125,7 +123,6 @@ class AsteroidShooter:
                     for i in range(level):
                         self.asteroids.add(Asteroid(choice(self.rand_side)))
                     level += 1
-
                 #updates the ship, asteroids, and missiles
                 self.screen.blit(text, text.get_rect())
                 self.ships.update(self.screen_rect.height, self.screen_rect.width, self.missiles)
